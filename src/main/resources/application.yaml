@@ -1,1 +1,18 @@
+spring:
+  application:
+    name: order-service
+  config:
+    import: optional:.env[.properties]
+  r2dbc:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+server:
+  port: 0
 
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE-URL}
+  instance:
+    prefer-ip-address: true
