@@ -9,9 +9,10 @@ import java.math.BigDecimal;
 public interface AssignmentService {
 
     static BigDecimal calculateTotalCost(Assignment assignment) {
-        return assignment.getTasks().stream()
-                .map(t -> t.getCostPerHour().multiply(BigDecimal.valueOf(t.getDuration())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return null;
+        // todo       return assignment.getTasks().stream()
+//                .map(t -> t.getCostPerHour().multiply(BigDecimal.valueOf(t.getDuration())))
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     Mono<Assignment> create(Assignment assignment);

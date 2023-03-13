@@ -5,12 +5,14 @@ import com.gznznzjsn.orderservice.domain.Order;
 import com.gznznzjsn.orderservice.domain.OrderStatus;
 import com.gznznzjsn.orderservice.domain.exception.IllegalActionException;
 import com.gznznzjsn.orderservice.domain.exception.ResourceNotFoundException;
-import com.gznznzjsn.orderservice.repository.OrderRepository;
+import com.gznznzjsn.orderservice.persistence.repository.OrderRepository;
 import com.gznznzjsn.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
                         .status(OrderStatus.NOT_SENT)
                         .user(o.getUser())
                         .arrivalTime(order.getArrivalTime())
+                        .createdAt(LocalDateTime.now())
                         .build()
                 )
                 .flatMap(orderRepository::save);
@@ -73,8 +76,12 @@ public class OrderServiceImpl implements OrderService {
         return Mono.just(order)
                 .flatMap(o -> get(o.getId()))
                 .map(orderFromRepository -> {
-                    orderFromRepository.setStatus(order.getStatus());
-                    orderFromRepository.setArrivalTime(order.getArrivalTime());
+                    if (order.getStatus() != null) {
+                        orderFromRepository.setStatus(order.getStatus());
+                    }
+                    if (order.getArrivalTime() != null) {
+                        orderFromRepository.setArrivalTime(order.getArrivalTime());
+                    }
                     return orderFromRepository;
                 })
                 .flatMap(orderRepository::save);

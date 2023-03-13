@@ -1,23 +1,20 @@
 package com.gznznzjsn.orderservice.service.impl;
 
 
-import com.gznznzjsn.orderservice.domain.Assignment;
-import com.gznznzjsn.orderservice.domain.AssignmentStatus;
-import com.gznznzjsn.orderservice.domain.Order;
-import com.gznznzjsn.orderservice.domain.Task;
+import com.gznznzjsn.orderservice.domain.*;
 import com.gznznzjsn.orderservice.domain.exception.IllegalActionException;
 import com.gznznzjsn.orderservice.domain.exception.NotEnoughResourcesException;
 import com.gznznzjsn.orderservice.domain.exception.ResourceNotFoundException;
-import com.gznznzjsn.orderservice.repository.AssignmentRepository;
+import com.gznznzjsn.orderservice.persistence.repository.AssignmentRepository;
 import com.gznznzjsn.orderservice.service.AssignmentService;
 import com.gznznzjsn.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
+import reactor.util.function.Tuple2;
 
 @Service
 @RequiredArgsConstructor
@@ -25,56 +22,73 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final OrderService orderService;
-//todo    private final WebClient.Builder webClientBuilder;
-//        Boolean isAcceptable = webClientBuilder.build().get().uri("http://inventory-service/api/inventory")
-//                .retrieve()
-//                .bodyToMono(Boolean.class)
-//                .block();
-//        if (Boolean.FALSE.equals(isAcceptable)) {
-//            throw new NotEnoughResourcesException("We are out of order forms!)))");
-//        }
+    private final WebClient.Builder webClientBuilder;
 
     @Override
     @Transactional
     public Mono<Assignment> create(Assignment assignment) {
-        Mono<Assignment> assignmentMono = Mono.just(assignment)
+        Mono<Assignment> cachedAssignmentMono = Mono.just(assignment)
                 .map(a -> Assignment.builder()
                         .id(a.getId())
                         .status(AssignmentStatus.NOT_SENT)
                         .order(a.getOrder())
                         .tasks(a.getTasks())
                         .userCommentary(a.getUserCommentary())
-                        .build());
-        Mono<Order> orderMono = assignmentMono
+                        .build()).cache();
+        Mono<Order> orderMono = cachedAssignmentMono
                 .map(a -> a.getOrder().getId())
-                .flatMap(orderService::get);
-        Mono<List<Task>> taskListMono = assignmentMono
-                .map(Assignment::getTasks);
-        return Mono.empty();
-//        return Mono.zip(assignmentMono, orderMono, taskListMono)
-//                .flatMap(data -> Mono.zip(data.getT1(), data.getT2(), data.getT3());
+                .flatMap(orderService::get)
+                .flatMap(order -> {
+                    if (!OrderStatus.NOT_SENT.equals(order.getStatus())) {
+                        return Mono.error(
+                                new IllegalActionException("You can't add assignment to already sent order!")
+                        );
+                    }
+                    return Mono.just(order);
+                });
+        Mono<Specialization> specializationMono = cachedAssignmentMono
+                .map(Assignment::getTasks)
+                .map(tasks -> {
+                    tasks.forEach(task -> {
+                        task.setSpecialization(Specialization.CLEANER);
+                    });
+                    return tasks;
+                }) //todo fetch from task service instead of hardcoding
+                .flatMap(tasks -> {
+                            if (tasks == null || tasks.isEmpty()) {
+                                return Mono.error(
+                                        new NotEnoughResourcesException("You can't create assignment without tasks!")
+                                );
+                            }
+                            return Mono.just(tasks);
+                        }
+                )
+                .flatMap(tasks -> {
+                    Specialization probableSpecialization = tasks.get(0).getSpecialization();
+                    for (Task task : tasks) {
+                        if (!probableSpecialization.equals(task.getSpecialization())) {
+                            return Mono.error(
+                                    new IllegalActionException("You can't create assignment with multiple specializations!")
+                            );
+                        }
+                    }
+                    return Mono.just(probableSpecialization);
+                });//todo set tasks somehow
+        cachedAssignmentMono = Mono.zip(cachedAssignmentMono, orderMono, specializationMono)
+                .map(t -> {
+                    Assignment a = t.getT1();
+                    a.setSpecialization(t.getT3());
+                    return a;
+                })
+                .cache();
+        Mono<Assignment> createdAssignmentMono = cachedAssignmentMono
+                .flatMap(assignmentRepository::save);
+        Mono<Assignment> createAssignmentWithTasksMono = cachedAssignmentMono
+// todo implement method   .flatMap(assignmentRepository::saveAssignmentWithTasks);
+                ;
+        return Mono.zip(createdAssignmentMono, createAssignmentWithTasksMono)
+                .map(Tuple2::getT1);
 
-
-//todo        Order order = orderService.get(assignmentToCreate.getOrder().getId());
-//        assignmentToCreate.setOrder(order);
-//        if (!OrderStatus.NOT_SENT.equals(assignmentToCreate.getOrder().getStatus())) {
-//            throw new IllegalActionException("You can't add assignment to already sent order!");
-//        }
-//        List<Task> tasks = assignmentToCreate.getTasks();
-//        if (tasks == null || tasks.isEmpty()) {
-//            throw new NotEnoughResourcesException("You can't create assignment without tasks!");
-//        }
-//        Specialization probableSpecialization = taskService.get(tasks.get(0).getId()).getSpecialization();
-//        for (Task task : tasks) {
-//            if (!taskService.get(task.getId()).getSpecialization().equals(probableSpecialization)) {
-//                throw new IllegalActionException("You can't create assignment with multiple specializations!");
-//            }
-//        }
-//        assignmentToCreate.setSpecialization(probableSpecialization);
-//        assignmentRepository.create(assignmentToCreate);
-//        assignmentRepository.createTasks(assignmentToCreate);
-//        assignmentToCreate.setTasks(taskService.getTasks(assignmentToCreate.getId()));
-//        return assignmentToCreate;
     }
 
     @Override
@@ -114,13 +128,27 @@ public class AssignmentServiceImpl implements AssignmentService {
         return Mono.just(assignment)
                 .flatMap(a -> get(a.getId()))
                 .map(assignmentFromRepository -> {
-                    assignmentFromRepository.setStatus(assignment.getStatus());
-                    assignmentFromRepository.setStartTime(assignment.getStartTime());
-                    assignmentFromRepository.setFinalCost(assignment.getFinalCost());
-                    assignmentFromRepository.setEmployee(assignment.getEmployee());
-                    assignmentFromRepository.setUserCommentary(assignment.getUserCommentary());
-                    assignmentFromRepository.setEmployeeCommentary(assignment.getEmployeeCommentary());
-                    assignmentFromRepository.setTasks(assignment.getTasks());
+                    if (assignment.getStatus() != null) {
+                        assignmentFromRepository.setStatus(assignment.getStatus());
+                    }
+                    if (assignment.getStartTime() != null) {
+                        assignmentFromRepository.setStartTime(assignment.getStartTime());
+                    }
+                    if (assignment.getFinalCost() != null) {
+                        assignmentFromRepository.setFinalCost(assignment.getFinalCost());
+                    }
+                    if (assignment.getEmployee() != null) {
+                        assignmentFromRepository.setEmployee(assignment.getEmployee());
+                    }
+                    if (assignment.getUserCommentary() != null) {
+                        assignmentFromRepository.setUserCommentary(assignment.getUserCommentary());
+                    }
+                    if (assignment.getEmployeeCommentary() != null) {
+                        assignmentFromRepository.setEmployeeCommentary(assignment.getEmployeeCommentary());
+                    }
+                    if (assignment.getTasks() != null) {
+                        assignmentFromRepository.setTasks(assignment.getTasks());
+                    }
                     return assignmentFromRepository;
                 })
                 .flatMap(assignmentRepository::save);

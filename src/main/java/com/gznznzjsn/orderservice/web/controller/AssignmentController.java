@@ -15,13 +15,12 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/car-service")
+@RequestMapping("/order-api/v1")
 public class AssignmentController {
 
     private final AssignmentMapper assignmentMapper;
     private final AssignmentService assignmentService;
 
-    //    @PreAuthorize("@securityChecks.hasAssignment(#userId,#orderId,#assignmentId)")
     @GetMapping("users/{userId}/orders/{orderId}/assignments/{assignmentId}")
     public Mono<AssignmentDto> get(@PathVariable Long userId, @PathVariable Long orderId, @PathVariable Long assignmentId) {
         return assignmentService
@@ -29,7 +28,6 @@ public class AssignmentController {
                 .map(assignmentMapper::toDto);
     }
 
-    //    @PreAuthorize("@securityChecks.hasOrder(#userId,#orderId)")
     @PostMapping("users/{userId}/orders/{orderId}/assignments")
     public Mono<AssignmentDto> create(@Validated(OnCreateAssignment.class) @RequestBody AssignmentDto assignmentDto, @PathVariable Long orderId, @PathVariable Long userId) {
         return Mono.just(assignmentDto)
@@ -47,7 +45,6 @@ public class AssignmentController {
                 .map(assignmentMapper::toDto);
     }
 
-    //    @PreAuthorize("hasAuthority('EMPLOYEE_MANAGER')")
     @PatchMapping("assignments/{assignmentId}")
     public Mono<AssignmentDto> accept(@Validated(OnAccept.class) @RequestBody AssignmentDto assignmentDto, @PathVariable Long assignmentId) {
         return Mono.just(assignmentDto)

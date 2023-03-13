@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/car-service/users/{userId}/orders")
+@RequestMapping("/order-api/v1/users/{userId}/orders")
 public class OrderController {
 
     private final AssignmentService assignmentService;
@@ -24,7 +24,6 @@ public class OrderController {
     private final OrderMapper orderMapper;
     private final AssignmentMapper assignmentMapper;
 
-    //    @PreAuthorize("@securityChecks.hasOrder(#userId,#orderId)")
     @PostMapping("/{orderId}/send")
     public Flux<AssignmentDto> sendWithAssignments(@PathVariable Long orderId, @PathVariable Long userId) {
         return Mono.just(orderId)
@@ -32,7 +31,6 @@ public class OrderController {
                 .map(assignmentMapper::toDto);
     }
 
-    //    @PreAuthorize("@securityChecks.hasUser(#userId)")
     @PostMapping
     public Mono<OrderDto> create(@Validated(OnCreateOrder.class) @RequestBody OrderDto orderDto, @PathVariable Long userId) {
         return Mono.just(orderDto)
@@ -47,7 +45,6 @@ public class OrderController {
                 .map(orderMapper::toDto);
     }
 
-    //    @PreAuthorize("@securityChecks.hasOrder(#userId,#orderId)")
     @GetMapping("/{orderId}")
     public Mono<OrderDto> get(@PathVariable Long orderId, @PathVariable Long userId) {
         return orderService.get(orderId)

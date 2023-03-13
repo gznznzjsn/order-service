@@ -1,4 +1,4 @@
-package com.gznznzjsn.orderservice.repository;
+package com.gznznzjsn.orderservice.persistence.repository;
 
 import com.gznznzjsn.orderservice.domain.Order;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
