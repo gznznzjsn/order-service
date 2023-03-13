@@ -1,12 +1,19 @@
 spring:
   application:
     name: order-service
+  jackson:
+    default-property-inclusion: NON_NULL
   config:
     import: optional:.env[.properties]
   r2dbc:
-    url: ${SPRING_DATASOURCE_URL}
+    url: ${SPRING_R2DBC_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: ${SPRING_LIQUIBASE_DEFAULT-SCHEMA}
+    url: ${SPRING_JDBC_URL}
 server:
   port: 0
 
