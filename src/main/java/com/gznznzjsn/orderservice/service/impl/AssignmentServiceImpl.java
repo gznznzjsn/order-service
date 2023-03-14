@@ -15,6 +15,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,18 +27,44 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final OrderService orderService;
     private final WebClient.Builder webClientBuilder;
 
+    private Flux<Task> fetchTasksByAssignment(Assignment assignment) {
+        return Mono.just(assignment)
+                .flatMapMany(a -> webClientBuilder.build()
+                        .get()
+                        .uri(uriBuilder -> uriBuilder
+                                .scheme("http")
+                                .host("task-service")
+                                .path("/task-api/v1/tasks")
+                                .queryParam("taskId",
+                                        a.getTasks().stream()
+                                                .map(Task::getId)
+                                                .toList())
+                                .build()
+                        )
+                        .retrieve()
+                        .bodyToFlux(Task.class)
+                );
+    }
+
+
     @Override
     @Transactional
     public Mono<Assignment> create(Assignment assignment) {
-        Mono<Assignment> cachedAssignmentMono = Mono.just(assignment)
-                .map(a -> Assignment.builder()
-                        .id(a.getId())
-                        .status(AssignmentStatus.NOT_SENT)
-                        .order(a.getOrder())
-                        .tasks(a.getTasks())
-                        .userCommentary(a.getUserCommentary())
-                        .build()).cache();
-        Mono<Order> orderMono = cachedAssignmentMono
+        Mono<Tuple2<List<Task>, Specialization>> tasksAndSpecializationMono = fetchTasksByAssignment(assignment)
+                .switchIfEmpty(Flux.error(new NotEnoughResourcesException("You can't create assignment without tasks!")))
+                .collectList()
+                .flatMap(tasks -> {
+                    Specialization probableSpecialization = tasks.get(0).getSpecialization();
+                    for (Task task : tasks) {
+                        if (!probableSpecialization.equals(task.getSpecialization())) {
+                            return Mono.error(
+                                    new IllegalActionException("You can't create assignment with multiple specializations!")
+                            );
+                        }
+                    }
+                    return Mono.just(Tuples.of(tasks, probableSpecialization));
+                });
+        Mono<Order> orderMono = Mono.just(assignment)
                 .map(a -> a.getOrder().getId())
                 .flatMap(orderService::get)
                 .flatMap(order -> {
@@ -46,49 +75,32 @@ public class AssignmentServiceImpl implements AssignmentService {
                     }
                     return Mono.just(order);
                 });
-        Mono<Specialization> specializationMono = cachedAssignmentMono
-                .map(Assignment::getTasks)
-                .map(tasks -> {
-                    tasks.forEach(task -> {
-                        task.setSpecialization(Specialization.CLEANER);
-                    });
-                    return tasks;
-                }) //todo fetch from task service instead of hardcoding
-                .flatMap(tasks -> {
-                            if (tasks == null || tasks.isEmpty()) {
-                                return Mono.error(
-                                        new NotEnoughResourcesException("You can't create assignment without tasks!")
-                                );
-                            }
-                            return Mono.just(tasks);
-                        }
-                )
-                .flatMap(tasks -> {
-                    Specialization probableSpecialization = tasks.get(0).getSpecialization();
-                    for (Task task : tasks) {
-                        if (!probableSpecialization.equals(task.getSpecialization())) {
-                            return Mono.error(
-                                    new IllegalActionException("You can't create assignment with multiple specializations!")
-                            );
-                        }
-                    }
-                    return Mono.just(probableSpecialization);
-                });//todo set tasks somehow
-        cachedAssignmentMono = Mono.zip(cachedAssignmentMono, orderMono, specializationMono)
+        Mono<Assignment> cachedAssignmentMono = Mono.zip(tasksAndSpecializationMono, orderMono, Mono.just(assignment))
                 .map(t -> {
-                    Assignment a = t.getT1();
-                    a.setSpecialization(t.getT3());
-                    return a;
+                    Assignment a = t.getT3();
+                    List<Task> tasks = t.getT1().getT1();
+                    Specialization specialization = t.getT1().getT2();
+                    return Assignment.builder()
+                            .specialization(specialization)
+                            .status(AssignmentStatus.NOT_SENT)
+                            .order(a.getOrder())
+                            .tasks(tasks)
+                            .userCommentary(a.getUserCommentary())
+                            .build();
                 })
+                .flatMap(assignmentRepository::save)
                 .cache();
-        Mono<Assignment> createdAssignmentMono = cachedAssignmentMono
-                .flatMap(assignmentRepository::save);
-        Mono<Assignment> createAssignmentWithTasksMono = cachedAssignmentMono
-// todo implement method   .flatMap(assignmentRepository::saveAssignmentWithTasks);
-                ;
-        return Mono.zip(createdAssignmentMono, createAssignmentWithTasksMono)
-                .map(Tuple2::getT1);
-
+        return cachedAssignmentMono
+                .flatMapMany(a ->
+                        Flux.fromIterable(a.getTasks().stream()
+                                .map(
+                                        task -> Tuples.of(task.getId(), a.getId())
+                                )
+                                .toList()
+                        )
+                )
+                .flatMap(t -> assignmentRepository.saveTaskForAssignment(t.getT1(), t.getT2()))
+                .then(cachedAssignmentMono);
     }
 
     @Override
