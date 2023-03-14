@@ -8,6 +8,8 @@ import com.gznznzjsn.orderservice.domain.exception.ResourceNotFoundException;
 import com.gznznzjsn.orderservice.persistence.repository.AssignmentRepository;
 import com.gznznzjsn.orderservice.service.AssignmentService;
 import com.gznznzjsn.orderservice.service.OrderService;
+import com.gznznzjsn.orderservice.web.dto.TaskDto;
+import com.gznznzjsn.orderservice.web.dto.mapper.TaskMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final AssignmentRepository assignmentRepository;
     private final OrderService orderService;
     private final WebClient.Builder webClientBuilder;
+    private final TaskMapper taskMapper;
 
     private Flux<Task> fetchTasksByAssignment(Assignment assignment) {
         return Mono.just(assignment)
@@ -42,8 +45,9 @@ public class AssignmentServiceImpl implements AssignmentService {
                                 .build()
                         )
                         .retrieve()
-                        .bodyToFlux(Task.class)
-                );
+                        .bodyToFlux(TaskDto.class)
+                )
+                .map(taskMapper::toEntity);
     }
 
 
