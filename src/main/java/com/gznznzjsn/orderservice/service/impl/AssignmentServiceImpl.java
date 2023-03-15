@@ -8,7 +8,9 @@ import com.gznznzjsn.orderservice.domain.exception.ResourceNotFoundException;
 import com.gznznzjsn.orderservice.persistence.repository.AssignmentRepository;
 import com.gznznzjsn.orderservice.service.AssignmentService;
 import com.gznznzjsn.orderservice.service.OrderService;
+import com.gznznzjsn.orderservice.web.dto.PeriodDto;
 import com.gznznzjsn.orderservice.web.dto.TaskDto;
+import com.gznznzjsn.orderservice.web.dto.mapper.PeriodMapper;
 import com.gznznzjsn.orderservice.web.dto.mapper.TaskMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,6 +32,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final OrderService orderService;
     private final WebClient.Builder webClientBuilder;
     private final TaskMapper taskMapper;
+    private final PeriodMapper periodMapper;
 
     private Flux<Task> fetchTasksByAssignment(Assignment assignment) {
         return Mono.just(assignment)
@@ -50,6 +54,22 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .map(taskMapper::toEntity);
     }
 
+    private Mono<Period> fetchAndEraseAppropriatePeriod(LocalDateTime arrivalTime, Specialization specialization, Integer totalDuration) {
+        return webClientBuilder.build()
+                .post()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("http")
+                        .host("employee-service")
+                        .path("/employee-api/v1/periods")
+                        .queryParam("arrivalTime", arrivalTime)
+                        .queryParam("specialization", specialization)
+                        .queryParam("totalDuration", totalDuration)
+                        .build()
+                )
+                .retrieve()
+                .bodyToMono(PeriodDto.class)
+                .map(periodMapper::toEntity);
+    }
 
     @Override
     @Transactional
@@ -113,27 +133,50 @@ public class AssignmentServiceImpl implements AssignmentService {
         return orderService
                 .send(orderId)
                 .flatMapMany(o -> getAllByOrderId(o.getId()))
-                .switchIfEmpty(Mono.error(
+                .switchIfEmpty(Flux.error(
                         new NotEnoughResourcesException("You cannot send order without assignments!")
                 ))
+                .flatMap(a -> Mono.zip(
+                        Mono.just(a),
+                        assignmentRepository.findTasksByAssignmentId(a.getId()).collectList()
+                ))
+                .map(t -> {
+                    Assignment a = t.getT1();
+                    List<Task> tasks = t.getT2();
+                    a.setTasks(tasks);
+                    return a;
+                })
+                .flatMap(a -> Mono.zip(
+                                Mono.just(a),
+                                fetchTasksByAssignment(a).collectList()
+                        )
+                )
+                .map(t -> {
+                    Assignment a = t.getT1();
+                    List<Task> tasks = t.getT2();
+                    a.setTasks(tasks);
+                    return a;
+                })
                 .flatMap(a -> {
                     if (!AssignmentStatus.NOT_SENT.equals(a.getStatus())) {
                         return Mono.error(new IllegalActionException("You can't send assignment with id = " + a.getId() + ", because it's already sent!"));
                     }
-//todo
-//                    int totalDuration = a.getTasks().stream()
-//                            .map(Task::getDuration)
-//                            .reduce(0, Integer::sum);
-//                    Period appropriatePeriod = periodService.eraseAppropriate(a.getOrder().getArrivalTime(), a.getSpecialization(), totalDuration);
-//
-
-                    return Mono.just(a);
+                    int totalDuration = a.getTasks().stream()
+                            .map(Task::getDuration)
+                            .reduce(0, Integer::sum);
+                    return Mono.zip(
+                            Mono.just(a),
+                            fetchAndEraseAppropriatePeriod(a.getOrder().getArrivalTime(), a.getSpecialization(), totalDuration)
+                    );
                 })
-                .map(assignment -> {
-                    assignment.setStatus(AssignmentStatus.UNDER_CONSIDERATION);
-// todo                   assignment.setEmployee(appropriatePeriod.getEmployee());
-//                        assignment.setStartTime(appropriatePeriod.getDate().atTime(appropriatePeriod.getStart(), 0))
-                    return assignment;
+                .map(t -> {
+                    Assignment a = t.getT1();
+                    Period period = t.getT2();
+                    System.out.println(period);
+                    a.setStatus(AssignmentStatus.UNDER_CONSIDERATION);
+                    a.setEmployee(period.getEmployee());
+                    a.setStartTime(period.getDate().atTime(period.getStart(), 0));
+                    return a;
                 })
                 .flatMap(this::update);
     }

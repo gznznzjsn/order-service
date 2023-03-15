@@ -1,11 +1,12 @@
 package com.gznznzjsn.orderservice.web.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gznznzjsn.orderservice.domain.Specialization;
 
 public record EmployeeDto(
 
-        @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-        Long id
+        Long id,
+        String name,
+        Specialization specialization
 
 ) {
 }

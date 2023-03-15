@@ -12,6 +12,9 @@ public class AssignmentWriteConverter implements Converter<Assignment, OutboundR
     @Override
     public OutboundRow convert(Assignment assignment) {
         OutboundRow row = new OutboundRow();
+        if (assignment.getId() != null) {
+            row.put("assignment_id", Parameter.from(assignment.getId()));
+        }
         if (assignment.getOrder() != null && assignment.getOrder().getId() != null) {
             row.put("order_id", Parameter.from(assignment.getOrder().getId()));
         }

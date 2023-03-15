@@ -6,6 +6,7 @@ import com.gznznzjsn.orderservice.service.OrderService;
 import com.gznznzjsn.orderservice.web.dto.AssignmentDto;
 import com.gznznzjsn.orderservice.web.dto.OrderDto;
 import com.gznznzjsn.orderservice.web.dto.group.OnCreateOrder;
+import com.gznznzjsn.orderservice.web.dto.mapper.AssignmentListMapper;
 import com.gznznzjsn.orderservice.web.dto.mapper.AssignmentMapper;
 import com.gznznzjsn.orderservice.web.dto.mapper.OrderMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderMapper orderMapper;
     private final AssignmentMapper assignmentMapper;
+    private final AssignmentListMapper assignmentListMapper;
 
     @PostMapping("/{orderId}/send")
     public Flux<AssignmentDto> sendWithAssignments(@PathVariable Long orderId, @PathVariable Long userId) {

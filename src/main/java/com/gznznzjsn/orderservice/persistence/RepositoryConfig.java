@@ -1,9 +1,6 @@
 package com.gznznzjsn.orderservice.persistence;
 
-import com.gznznzjsn.orderservice.persistence.converter.AssignmentReadConverter;
-import com.gznznzjsn.orderservice.persistence.converter.AssignmentWriteConverter;
-import com.gznznzjsn.orderservice.persistence.converter.OrderReadConverter;
-import com.gznznzjsn.orderservice.persistence.converter.OrderWriteConverter;
+import com.gznznzjsn.orderservice.persistence.converter.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -23,6 +20,7 @@ public class RepositoryConfig {
         converters.add(new OrderWriteConverter());
         converters.add(new AssignmentReadConverter());
         converters.add(new AssignmentWriteConverter());
+        converters.add(new TaskReadConverter());
         return R2dbcCustomConversions.of(MySqlDialect.INSTANCE, converters);
     }
 

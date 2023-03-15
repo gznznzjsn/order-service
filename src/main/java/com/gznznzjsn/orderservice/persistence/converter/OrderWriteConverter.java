@@ -12,6 +12,9 @@ public class OrderWriteConverter implements Converter<Order, OutboundRow> {
     @Override
     public OutboundRow convert(Order order) {
         OutboundRow row = new OutboundRow();
+        if (order.getId() != null) {
+            row.put("order_id", Parameter.from(order.getId()));
+        }
         if (order.getStatus() != null) {
             row.put("status", Parameter.from(order.getStatus()));
         }

@@ -6,7 +6,7 @@ import com.gznznzjsn.orderservice.web.dto.AssignmentDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {EmployeeMapper.class, TaskListMapper.class})
+@Mapper(componentModel = "spring", uses = {EmployeeMapper.class, TaskListMapper.class, OrderMapper.class})
 public interface AssignmentMapper {
 
     Assignment toEntity(AssignmentDto dto);
