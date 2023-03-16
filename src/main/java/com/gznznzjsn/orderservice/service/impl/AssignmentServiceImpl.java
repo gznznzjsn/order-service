@@ -5,6 +5,7 @@ import com.gznznzjsn.orderservice.domain.*;
 import com.gznznzjsn.orderservice.domain.exception.IllegalActionException;
 import com.gznznzjsn.orderservice.domain.exception.NotEnoughResourcesException;
 import com.gznznzjsn.orderservice.domain.exception.ResourceNotFoundException;
+import com.gznznzjsn.orderservice.kafka.TaskSender;
 import com.gznznzjsn.orderservice.persistence.repository.AssignmentRepository;
 import com.gznznzjsn.orderservice.service.AssignmentService;
 import com.gznznzjsn.orderservice.service.OrderService;
@@ -33,6 +34,8 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final WebClient.Builder webClientBuilder;
     private final TaskMapper taskMapper;
     private final PeriodMapper periodMapper;
+    private final TaskSender taskSender;
+
 
     private Flux<Task> fetchTasksByAssignment(Assignment assignment) {
         return Mono.just(assignment)
@@ -172,13 +175,20 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .map(t -> {
                     Assignment a = t.getT1();
                     Period period = t.getT2();
-                    System.out.println(period);
                     a.setStatus(AssignmentStatus.UNDER_CONSIDERATION);
                     a.setEmployee(period.getEmployee());
                     a.setStartTime(period.getDate().atTime(period.getStart(), 0));
                     return a;
                 })
-                .flatMap(this::update);
+                .flatMap(this::update)
+                .flatMap(a -> {
+                    a.getTasks().forEach(
+                            task -> taskSender
+                                    .send(
+                                            task.getId()
+                                    ));
+                    return Mono.just(a);
+                });
     }
 
     @Override
