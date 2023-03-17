@@ -22,12 +22,20 @@
         <org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
         <r2dbc.postgresql.version>1.0.1.RELEASE</r2dbc.postgresql.version>
         <liquibase.version>4.18.0</liquibase.version>
+        <jcabi-xml.version>0.27.0</jcabi-xml.version>
+        <xembly.version>0.28.1</xembly.version>
+        <reactor-kafka.version>1.2.2.RELEASE</reactor-kafka.version>
+        <postgresql.version>42.5.4</postgresql.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
@@ -49,7 +57,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.5.4</version>
+            <version>${postgresql.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -73,25 +81,13 @@
             <version>${liquibase.version}</version>
         </dependency>
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.kafka</groupId>
             <artifactId>reactor-kafka</artifactId>
-            <version>1.2.2.RELEASE</version>
+            <version>${reactor-kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -101,14 +97,15 @@
         <dependency>
             <groupId>com.jcabi</groupId>
             <artifactId>jcabi-xml</artifactId>
-            <version>0.27.0</version>
+            <version>${jcabi-xml.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jcabi.incubator</groupId>
             <artifactId>xembly</artifactId>
-            <version>0.28.1</version>
+            <version>${xembly.version}</version>
         </dependency>
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -145,11 +142,11 @@
                             <version>${org.mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
-
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
     <repositories>
         <repository>
             <id>netflix-candidates</id>
@@ -160,4 +157,5 @@
             </snapshots>
         </repository>
     </repositories>
+
 </project>
