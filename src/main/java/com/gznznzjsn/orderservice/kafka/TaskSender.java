@@ -17,7 +17,7 @@ public class TaskSender {
                 Mono.just(
                         SenderRecord.create(
                                 "tasks",
-                                1,
+                                0,
                                 System.currentTimeMillis(),
                                 "task",
                                 taskId,

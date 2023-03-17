@@ -182,11 +182,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                 })
                 .flatMap(this::update)
                 .flatMap(a -> {
-                    a.getTasks().forEach(
-                            task -> taskSender
-                                    .send(
-                                            task.getId()
-                                    ));
+                    a.getTasks().forEach(task -> taskSender.send(task.getId()));
                     return Mono.just(a);
                 });
     }
