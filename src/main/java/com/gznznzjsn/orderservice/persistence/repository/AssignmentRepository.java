@@ -46,7 +46,7 @@ public interface AssignmentRepository extends R2dbcRepository<Assignment, Long> 
                    o.user_id             as "order_user_id",
                    employee_id       as "employee_id"
             FROM assignments a
-                     JOIN orders o USING (order_id)JOIN assignments_tasks USING (assignment_id)
+                     JOIN orders o USING (order_id)
                 WHERE order_id = $1
                 """)
     Flux<Assignment> findAllByOrderId(Long orderId);

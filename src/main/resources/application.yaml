@@ -23,3 +23,7 @@ eureka:
       defaultZone: ${EUREKA_CLIENT_SERVICE-URL}
   instance:
     prefer-ip-address: true
+
+
+settings:
+  taskProducer: classpath:kafka/taskProducer.xml
