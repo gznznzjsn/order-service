@@ -5,7 +5,7 @@ import com.gznznzjsn.orderservice.domain.*;
 import com.gznznzjsn.orderservice.domain.exception.IllegalActionException;
 import com.gznznzjsn.orderservice.domain.exception.NotEnoughResourcesException;
 import com.gznznzjsn.orderservice.domain.exception.ResourceNotFoundException;
-import com.gznznzjsn.orderservice.kafka.TaskSender;
+import com.gznznzjsn.orderservice.web.kafka.TaskSender;
 import com.gznznzjsn.orderservice.persistence.repository.AssignmentRepository;
 import com.gznznzjsn.orderservice.service.AssignmentService;
 import com.gznznzjsn.orderservice.service.OrderService;

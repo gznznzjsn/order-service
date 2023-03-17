@@ -1,4 +1,4 @@
-package com.gznznzjsn.orderservice.kafka;
+package com.gznznzjsn.orderservice.web.kafka;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
