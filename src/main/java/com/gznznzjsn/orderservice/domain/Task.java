@@ -13,9 +13,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class Task {
 
-    private Long id;
+    private String id;
     private String name;
-    private int duration;
+    private Integer duration;
     private BigDecimal costPerHour;
     private Specialization specialization;
 

@@ -29,7 +29,7 @@ public class TaskProducerConfig {
     }
 
     @Bean
-    public SenderOptions<String, Long> senderOptions() {
+    public SenderOptions<String, String> senderOptions() {
         XMLParser parser = new XMLParser(taskProducerSettings);
         Map<String, Object> properties = new HashMap<>();
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -42,7 +42,7 @@ public class TaskProducerConfig {
     }
 
     @Bean
-    public KafkaSender<String, Long> sender(SenderOptions<String, Long> senderOptions) {
+    public KafkaSender<String, String> sender(SenderOptions<String, String> senderOptions) {
         return KafkaSender.create(senderOptions);
     }
 

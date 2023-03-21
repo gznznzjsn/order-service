@@ -13,9 +13,9 @@ import reactor.kafka.sender.SenderRecord;
 public class TaskSender {
 
     private final XML taskProducerSettings;
-    private final KafkaSender<String, Long> sender;
+    private final KafkaSender<String, String> sender;
 
-    public void send(Long taskId) {
+    public void send(String taskId) {
         this.sender.send(
                 Mono.just(
                         SenderRecord.create(

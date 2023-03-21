@@ -55,7 +55,7 @@ public interface AssignmentRepository extends R2dbcRepository<Assignment, Long> 
             INSERT INTO assignments_tasks (assignment_id, task_id)
             VALUES($2,$1);
             """)
-    Mono<Void> saveTaskForAssignment(Long taskId, Long assignmentId);
+    Mono<Void> saveTaskForAssignment(String taskId, Long assignmentId);
 
     @Query("""
             SELECT task_id

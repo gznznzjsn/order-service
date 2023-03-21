@@ -247,11 +247,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                     }
                     return Mono.just(assignment);
                 })
-                .map(a -> {
-                            a.setStatus(AssignmentStatus.ACCEPTED);
-                            return a;
-                        }
-                )
+                .doOnNext(a -> a.setStatus(AssignmentStatus.ACCEPTED))
                 .flatMap(this::update);
     }
 
