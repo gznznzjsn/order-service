@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <taskProducer>
     <requiredTaskKey>requiredTask</requiredTaskKey>
-    <bootstrapServers>localhost:9092</bootstrapServers>
+    <bootstrapServers>kafka-service:9092</bootstrapServers>
     <keySerializerClass>org.apache.kafka.common.serialization.StringSerializer</keySerializerClass>
     <valueSerializerClass>org.apache.kafka.common.serialization.StringSerializer</valueSerializerClass>
 </taskProducer>
