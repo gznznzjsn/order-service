@@ -17,6 +17,7 @@
     <description>order-service</description>
 
     <properties>
+        <start-class>com.gznznzjsn.orderservice.OrderServiceApplication</start-class>
         <java.version>19</java.version>
         <spring-cloud.version>2022.0.1</spring-cloud.version>
         <org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
@@ -117,6 +118,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.gznznzjsn.taskservice.TaskServiceApplication</mainClass>
+                    <layout>JAR</layout>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

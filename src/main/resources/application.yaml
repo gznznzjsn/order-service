@@ -15,6 +15,8 @@ spring:
     url: ${SPRING_JDBC_URL}
     password: ${SPRING_DATASOURCE_PASSWORD}
     user: ${SPRING_DATASOURCE_USERNAME}
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP-SERVERS}
 server:
   port: 8080
 
