@@ -119,7 +119,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.gznznzjsn.taskservice.TaskServiceApplication</mainClass>
+                    <mainClass>com.gznznzjsn.orderservice.OrderServiceApplication</mainClass>
                     <layout>JAR</layout>
                 </configuration>
             </plugin>
