@@ -17,4 +17,4 @@ server:
   port: 8080
 
 settings:
-  taskProducer: classpath:kafka/taskProducer.xml
+  taskProducer: kafka/taskProducer.xml

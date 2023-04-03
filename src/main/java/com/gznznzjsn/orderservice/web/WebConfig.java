@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.ResourceUtils;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
@@ -25,7 +25,7 @@ public class WebConfig {
     @Bean
     @SneakyThrows
     public XML taskProducerSettings() {
-        return new XMLDocument(ResourceUtils.getFile(taskProducerPath));
+        return new XMLDocument(new ClassPathResource(taskProducerPath).getInputStream());
     }
 
 }
