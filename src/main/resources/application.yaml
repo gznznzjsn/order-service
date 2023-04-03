@@ -13,6 +13,8 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
     url: ${SPRING_JDBC_URL}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    user: ${SPRING_DATASOURCE_USERNAME}
 server:
   port: 8080
 
