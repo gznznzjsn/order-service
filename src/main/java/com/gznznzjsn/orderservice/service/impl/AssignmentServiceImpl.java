@@ -135,7 +135,10 @@ public class AssignmentServiceImpl implements AssignmentService {
                         )
                 )
                 .flatMap(t -> assignmentRepository.saveTaskForAssignment(t.getT1(), t.getT2()))
-                .then(cachedAssignmentMono);
+                .then(cachedAssignmentMono)
+                .doOnNext(a -> a.getTasks().forEach(
+                        task -> taskSender.send(task.getId())
+                ));
     }
 
     @Override
@@ -188,11 +191,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                     a.setStartTime(period.getDate().atTime(period.getStart(), 0));
                     return a;
                 })
-                .flatMap(this::update)
-                .flatMap(a -> {
-                    a.getTasks().forEach(task -> taskSender.send(task.getId()));
-                    return Mono.just(a);
-                });
+                .flatMap(this::update);
     }
 
     @Override
