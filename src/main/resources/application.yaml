@@ -22,3 +22,6 @@ server:
 
 settings:
   taskProducer: kafka/taskProducer.xml
+  task-service:
+    host: ${SETTINGS_TASK-SERVICE_HOST}
+    port: ${SETTINGS_TASK-SERVICE_PORT}
