@@ -14,6 +14,7 @@ import com.gznznzjsn.orderservice.web.dto.TaskDto;
 import com.gznznzjsn.orderservice.web.dto.mapper.PeriodMapper;
 import com.gznznzjsn.orderservice.web.dto.mapper.TaskMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -36,6 +37,12 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final PeriodMapper periodMapper;
     private final TaskSender taskSender;
 
+    @Value("${settings.task-service.host}")
+    private String taskServiceHost;
+
+    @Value("${settings.task-service.port}")
+    private Integer taskServicePort;
+
 
     private Flux<Task> fetchTasksByAssignment(Assignment assignment) {
         return Mono.just(assignment)
@@ -43,7 +50,8 @@ public class AssignmentServiceImpl implements AssignmentService {
                         .get()
                         .uri(uriBuilder -> uriBuilder
                                 .scheme("http")
-                                .host("task-service")
+                                .host(taskServiceHost)
+                                .port(taskServicePort)
                                 .path("/task-api/v1/tasks")
                                 .queryParam("taskId",
                                         a.getTasks().stream()
@@ -127,7 +135,10 @@ public class AssignmentServiceImpl implements AssignmentService {
                         )
                 )
                 .flatMap(t -> assignmentRepository.saveTaskForAssignment(t.getT1(), t.getT2()))
-                .then(cachedAssignmentMono);
+                .then(cachedAssignmentMono)
+                .doOnNext(a -> a.getTasks().forEach(
+                        task -> taskSender.send(task.getId())
+                ));
     }
 
     @Override
@@ -180,11 +191,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                     a.setStartTime(period.getDate().atTime(period.getStart(), 0));
                     return a;
                 })
-                .flatMap(this::update)
-                .flatMap(a -> {
-                    a.getTasks().forEach(task -> taskSender.send(task.getId()));
-                    return Mono.just(a);
-                });
+                .flatMap(this::update);
     }
 
     @Override
@@ -247,11 +254,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                     }
                     return Mono.just(assignment);
                 })
-                .map(a -> {
-                            a.setStatus(AssignmentStatus.ACCEPTED);
-                            return a;
-                        }
-                )
+                .doOnNext(a -> a.setStatus(AssignmentStatus.ACCEPTED))
                 .flatMap(this::update);
     }
 

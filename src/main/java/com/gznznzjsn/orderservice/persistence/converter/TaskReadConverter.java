@@ -11,7 +11,7 @@ public class TaskReadConverter implements Converter<Row, Task> {
     @Override
     public Task convert(Row source) {
         return Task.builder()
-                .id(source.get("task_id", Long.class))
+                .id(source.get("task_id", String.class))
                 .build();
     }
 

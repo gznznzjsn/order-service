@@ -12,18 +12,16 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: ${SPRING_LIQUIBASE_DEFAULT-SCHEMA}
     url: ${SPRING_JDBC_URL}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    user: ${SPRING_DATASOURCE_USERNAME}
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP-SERVERS}
 server:
-  port: 0
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICE-URL}
-  instance:
-    prefer-ip-address: true
-
+  port: 8080
 
 settings:
-  taskProducer: classpath:kafka/taskProducer.xml
+  taskProducer: kafka/taskProducer.xml
+  task-service:
+    host: ${SETTINGS_TASK-SERVICE_HOST}
+    port: ${SETTINGS_TASK-SERVICE_PORT}

@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 public record TaskDto(
 
         @NotNull(message = "Task id is mandatory!", groups = {OnCreateAssignment.class})
-        Long id,
+        String id,
 
         @NotBlank(message = "Task name can't be blank!")
         @Length(max = 40, message = "Too long name!")
