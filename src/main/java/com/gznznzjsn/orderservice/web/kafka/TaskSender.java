@@ -1,7 +1,5 @@
 package com.gznznzjsn.orderservice.web.kafka;
 
-import com.gznznzjsn.orderservice.web.kafka.parser.XMLParser;
-import com.jcabi.xml.XML;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -12,7 +10,6 @@ import reactor.kafka.sender.SenderRecord;
 @RequiredArgsConstructor
 public class TaskSender {
 
-    private final XML taskProducerSettings;
     private final KafkaSender<String, String> sender;
 
     public void send(String taskId) {
@@ -22,7 +19,7 @@ public class TaskSender {
                                 "tasks",
                                 0,
                                 System.currentTimeMillis(),
-                                new XMLParser(taskProducerSettings).parse("requiredTaskKey"),
+                                taskId,
                                 taskId,
                                 null
                         )
