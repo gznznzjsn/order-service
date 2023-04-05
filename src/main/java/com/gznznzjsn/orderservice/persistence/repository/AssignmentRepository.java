@@ -4,6 +4,7 @@ import com.gznznzjsn.orderservice.domain.Assignment;
 import com.gznznzjsn.orderservice.domain.Task;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.data.repository.query.Param;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,9 +27,9 @@ public interface AssignmentRepository extends R2dbcRepository<Assignment, Long> 
                    employee_id       as "employee_id"
             FROM assignments a
                      JOIN orders o USING (order_id)
-                WHERE assignment_id = $1
+                WHERE assignment_id = :assignmentId
                 """)
-    Mono<Assignment> findById(Long assignmentId);
+    Mono<Assignment> findById(@Param("assignmentId") Long assignmentId);
 
     @Query("""
                  SELECT assignment_id,
@@ -47,22 +48,22 @@ public interface AssignmentRepository extends R2dbcRepository<Assignment, Long> 
                    employee_id       as "employee_id"
             FROM assignments a
                      JOIN orders o USING (order_id)
-                WHERE order_id = $1
+                WHERE order_id = :orderId
                 """)
-    Flux<Assignment> findAllByOrderId(Long orderId);
+    Flux<Assignment> findAllByOrderId(@Param("orderId") Long orderId);
 
     @Query("""
             INSERT INTO assignments_tasks (assignment_id, task_id)
-            VALUES($2,$1);
+            VALUES(:assignmentId,:taskId);
             """)
-    Mono<Void> saveTaskForAssignment(String taskId, Long assignmentId);
+    Mono<Void> saveTaskForAssignment(@Param("taskId") String taskId, @Param("assignmentId") Long assignmentId);
 
     @Query("""
             SELECT task_id
             FROM assignments_tasks
-            WHERE assignment_id = $1;
+            WHERE assignment_id = :assignmentId;
             """)
-    Flux<Task> findTasksByAssignmentId(Long assignmentId);
+    Flux<Task> findTasksByAssignmentId(@Param("assignmentId") Long assignmentId);
 
 
 }
