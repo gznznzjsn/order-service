@@ -6,17 +6,17 @@ spring:
   config:
     import: optional:.env[.properties]
   r2dbc:
-    url: ${SPRING_R2DBC_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${APP_R2DBC_URL}
+    username: ${APP_DATASOURCE_USERNAME}
+    password: ${APP_DATASOURCE_PASSWORD}
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    url: ${SPRING_JDBC_URL}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    user: ${SPRING_DATASOURCE_USERNAME}
+    url: ${APP_JDBC_URL}
+    password: ${APP_DATASOURCE_PASSWORD}
+    user: ${APP_DATASOURCE_USERNAME}
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP-SERVERS}
+    bootstrap-servers: ${APP_KAFKA_BOOTSTRAP-SERVERS}
 server:
   port: 8080
 
