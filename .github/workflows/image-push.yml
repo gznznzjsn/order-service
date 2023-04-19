@@ -31,3 +31,21 @@ jobs:
       - name: Push to Docker Hub
         run: |
           docker push ${{secrets.DOCKER_USER}}/order-service:latest
+
+  deployment:
+    needs: build
+    runs-on:
+      - self-hosted
+      - k8s-api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: rollout
+        run: |
+          set -ex
+          cd $HOME
+          wget https://dl.k8s.io/release/v1.26.0/bin/linux/arm64/kubectl
+          chmod +x ./kubectl
+          ~/kubectl rollout restart deployment order-service -n default
