@@ -32,8 +32,6 @@ public class TaskProducerConfig {
     public SenderOptions<String, String> senderOptions() {
         XMLParser parser = new XMLParser(taskProducerSettings);
         Map<String, Object> properties = new HashMap<>();
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                parser.parse("bootstrapServers"));
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                 parser.parse("keySerializerClass"));
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
